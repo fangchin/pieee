@@ -1,0 +1,103 @@
+#
+# Copyright 2024 Zettar Inc. All rights reserved.
+#
+# The following code is for internal use only.  Redistribution in any
+# form to a third party is prohibited without prior written permission
+# from Zettar Inc.
+#
+# Name : cbt_mean.gplt - a gnuplot command file for creating Zettar zx
+#                        combined bulk transfer (thus cbt :) sweep
+#                        data rate line plots.
+#
+# Authors: Chin Fang <fangchin@zettar.com>
+#
+# Purpose: Plotting Zettar zx bulk transfer site-to-site data rate
+#          line plots for over datasets consisting of different file
+#          sizes from 1KiB to 1TiB (aka sweep). Each dataset has
+#          either has 1M files, 1TiB overall size, or both.
+#
+# Notes :  0. It is assumed that each sweep consists of three
+#             iterations. The plot file consists of seven columns: 1)
+#             dataset name 2) 1st iteration result 3) 2nd iteration
+#             results, 4) 3rd iteration results 5) Mean 6) Medium 7)
+#             Standard Derivation.  So, the means are already
+#             available.
+#          1. Since three sweeps are used - one sweep for latency
+#             value=10ms, another 50ms, and then 100ms, so the 
+#             three ouput are pasted together into a file of 
+#             24 columns.
+#          2. gnuplot is used to pick the mean colum from each
+#             data file for the multi-line graph.
+#          3. To limit the Y axis by some range or to start it from
+#             a number != 0, e.g. 50, replace 
+#
+#             set yrange [0:]
+#             with 
+#             set yrange [50:]
+#
+#             and run gnuplot again.
+#
+# Usage: 
+#
+# Assuming
+#
+# o The command file is called rate_mean.gplt
+# o The input data file is 'inputs.dat'
+# o The output file is 'graph_rates.svg'
+#
+# then, do the following:
+#
+# gnuplot -e "datafile='cbt_combined.csv'; outputfile='bulk_mean_rates.svg'" graph_bulk_mean_rates.gplt
+#
+# Otherwise, define the delimiter explicitly, e.g. with space
+#
+# gnuplot -e "datafile='cbt_combined.dat'; outputfile='cbt_rates.svg'; separator=' '" cbt_mean.gplt
+
+# Set default separator to comma and allow override
+if (!exists("separator")) separator = ','
+set datafile separator separator
+
+# Set terminal type to svg for maximum applicability
+set terminal svg enhanced background rgb "white" size 1100,700
+set output outputfile
+
+# Get today's date in YYYY-MM-DD format
+date_str = system("date +'%Y-%m-%d'")
+# Title
+set title "Zettar zx Bulk Data transfer sweep 3-run Mean Data Rates on 2024-07-22\n". \
+          "{/*0.8 using the latency simulation-capable testbed in Intel Swindon lab, Swindon, U.K.}\n". \
+          "{/*0.7 TLS-encrypted. Across different File Sizes (1KiB - 1TiB) And Latencies}" \
+          font "Times Bold, 22"
+
+# X
+set xlabel "Dataset" offset 0,1
+set xlabel font "Times Bold,16"
+set xtics font "Verdana,12"
+set xtics rotate by 45 right
+
+# Y
+set ylabel "Mean Data Rates (Gbps)"
+set ylabel font "Times Bold,16"
+set yrange [0:]
+set grid ytics
+set ytics font "Verdana,12"
+set ytics scale 0.2
+set xtics scale 0.2
+
+# Grid - light-grey; every 10 on the vertical axis; every step on the horizontal axis
+set style line 101 lc rgb "#D3D3D3" lt 1 lw 1
+set grid ytics mytics ls 101
+set ytics 10
+set mytics 1
+set grid xtics mxtics ls 101
+set xtics 10
+set mxtics 1
+
+# Legend
+set key outside right
+set key font "Verdana,16"
+
+# Plot
+plot datafile using ($5):xtic(1) with lp lc rgb "#004586" pt 5 ps 0.7 lw 2 title "latency=10ms", \
+     datafile using ($12):xtic(1) with lp lc rgb "#ff420e" pt 7 ps 0.7 lw 2 title "latency=50ms", \
+     datafile using ($19):xtic(1) with lp lc rgb "#ffd320" pt 9 ps 0.7 lw 2 title "latency=100ms"

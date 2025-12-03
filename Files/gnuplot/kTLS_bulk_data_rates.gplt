@@ -1,0 +1,149 @@
+set terminal svg enhanced background rgb "white" size 1100,700
+set output "ktls_bulk_transfer_plot_consolidated.svg"
+
+# Title with multi-line formatting
+set title "{/Times:Bold=22 Zettar zx bulk data transfer sweep comparison (BBRv1 vs Cubic vs Reno) on 2025-09-20}\n\
+{/Times=16 Mean-speed, 3 iterations/sweep. Unconditionally kTLS-encrypted. Across different File Sizes (1KiB - 1TiB)}\n\
+{/Times=16 from Switzerland to California, U.S. over a 100 Gbps production link}\n\
+{/Times=16 burst buffer to burst buffer}"
+
+# X-axis
+set xlabel "Datasets"
+set xlabel font "Times Bold,16"
+set xtics rotate by 45 right
+set xtics font "Verdana,12"
+set xtics ('1048576x1KiB' 0, '1048576x2KiB' 1, '1048576x4KiB' 2, '1048576x8KiB' 3, '1048576x16KiB' 4, '1048576x32KiB' 5, '1048576x64KiB' 6, '1048576x128KiB' 7, '1048576x256KiB' 8, '1048576x512KiB' 9, '1048576x1MiB' 10, '524288x2MiB' 11, '262144x4MiB' 12, '131072x8MiB' 13, '65536x16MiB' 14, '32768x32MiB' 15, '16384x64MiB' 16, '8192x128MiB' 17, '4096x256MiB' 18, '2048x512MiB' 19, '1024x1GiB' 20, '512x2GiB' 21, '256x4GiB' 22, '128x8GiB' 23, '64x16GiB' 24, '32x32GiB' 25, '16x64GiB' 26, '8x128GiB' 27, '4x256GiB' 28, '2x512GiB' 29, '1x1TiB' 30)
+
+# Y-axis
+set ylabel "Mean data rates (Gbps)"
+set ylabel font "Times Bold,16"
+set yrange [0:100]
+set grid ytics
+set ytics font "Verdana,12"
+set ytics scale 0.2
+set xtics scale 0.2
+
+# Grid
+set grid
+set style data lines
+set grid ytics xtics
+set ytics 10
+set style line 100 lt 1 lc rgb 'grey' lw 0.5
+set grid ls 100
+
+# Line styles for different CCAs
+set style line 1 lw 3 lt rgb "#FF8C00" # Dark-orange for BBRv1
+set style line 2 lw 3 lt rgb "#1E90FF" # DodgerBlue for Cubic
+set style line 3 lw 3 lt rgb "#228B22" # ForestGreen for Reno
+
+# Key
+set key left top
+set key font "Verdana,12"
+
+# Create inline data instead of using arrays
+$bbr_data << EOD
+0 0.302
+1 0.616
+2 1.317
+3 2.647
+4 5.220
+5 10.523
+6 20.617
+7 21.889
+8 46.499
+9 71.878
+10 84.504
+11 77.562
+12 84.041
+13 72.151
+14 79.667
+15 77.867
+16 74.950
+17 79.396
+18 80.689
+19 81.412
+20 86.013
+21 72.709
+22 75.396
+23 73.712
+24 74.097
+25 77.167
+26 72.006
+27 72.870
+28 73.684
+29 80.210
+30 70.015
+EOD
+
+$cubic_data << EOD
+0 0.293
+1 0.568
+2 1.191
+3 2.317
+4 4.614
+5 8.554
+6 16.514
+7 24.085
+8 48.180
+9 66.000
+10 85.437
+11 81.859
+12 77.092
+13 88.358
+14 69.425
+15 74.592
+16 78.721
+17 78.154
+18 71.666
+19 72.023
+20 70.235
+21 77.284
+22 75.797
+23 72.280
+24 73.883
+25 74.530
+26 75.457
+27 73.544
+28 74.534
+29 76.003
+30 77.789
+EOD
+
+$reno_data << EOD
+0 0.294
+1 0.568
+2 1.190
+3 2.346
+4 4.623
+5 9.444
+6 17.298
+7 26.737
+8 40.078
+9 71.987
+10 81.997
+11 80.492
+12 84.329
+13 78.264
+14 80.444
+15 79.449
+16 75.944
+17 76.869
+18 77.762
+19 79.619
+20 81.629
+21 72.641
+22 69.298
+23 72.854
+24 69.632
+25 77.715
+26 78.680
+27 71.023
+28 77.305
+29 68.351
+30 75.134
+EOD
+
+# Plot all three lines with their respective data
+plot $bbr_data using 1:2 with lines ls 1 title "CCA=BBRv1", \
+     $cubic_data using 1:2 with lines ls 2 title "CCA=Cubic", \
+     $reno_data using 1:2 with lines ls 3 title "CCA=Reno"

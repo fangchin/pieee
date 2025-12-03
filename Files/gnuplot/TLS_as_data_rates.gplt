@@ -1,0 +1,90 @@
+set terminal svg enhanced background rgb "white" size 1100,700
+set output "tls_as_transfer_plot_consolidated.svg"
+
+# Title with multi-line formatting
+set title "{/Times:Bold=22 Zettar zx append-streaming data transfer sweep comparison (BBRv1 vs Cubic) on 2025-09-21}\n\
+{/Times=16 Mean-speed, 3 iterations/sweep. Unconditionally TLS-encrypted. Across different File Sizes (4MiB - 1TiB)}\n\
+{/Times=16 from Switzerland to California, U.S. over a 100 Gbps production link}\n\
+{/Times=16 burst buffer to burst buffer}"
+
+# X-axis
+set xlabel "Datasets"
+set xlabel font "Times Bold,16"
+set xtics rotate by 45 right
+set xtics font "Verdana,12"
+set xtics ('262144x4MiB' 0, '131072x8MiB' 1, '65536x16MiB' 2, '32768x32MiB' 3, '16384x64MiB' 4, '8192x128MiB' 5, '4096x256MiB' 6, '2048x512MiB' 7, '1024x1GiB' 8, '512x2GiB' 9, '256x4GiB' 10, '128x8GiB' 11, '64x16GiB' 12, '32x32GiB' 13, '16x64GiB' 14, '8x128GiB' 15, '4x256GiB' 16, '2x512GiB' 17, '1x1TiB' 18)
+
+# Y-axis
+set ylabel "Mean data rates (Gbps)"
+set ylabel font "Times Bold,16"
+set yrange [0:100]
+set grid ytics
+set ytics font "Verdana,12"
+set ytics scale 0.2
+set xtics scale 0.2
+
+# Grid
+set grid
+set style data lines
+set grid ytics xtics
+set ytics 10
+set style line 100 lt 1 lc rgb 'grey' lw 0.5
+set grid ls 100
+
+# Line styles for different CCAs
+set style line 1 lw 3 lt rgb "#FF8C00" # Dark-orange for BBRv1
+set style line 2 lw 3 lt rgb "#1E90FF" # DodgerBlue for Cubic
+
+# Key
+set key left top
+set key font "Verdana,12"
+
+# Data for BBRv1 from simple_as_out_20250921_18_combined.md
+$bbr_data << EOD
+0 74.377
+1 79.817
+2 80.645
+3 80.607
+4 81.889
+5 81.903
+6 81.921
+7 82.040
+8 81.892
+9 81.023
+10 81.885
+11 81.878
+12 82.295
+13 82.900
+14 83.000
+15 83.099
+16 83.084
+17 82.974
+18 82.989
+EOD
+
+# Data for Cubic from simple_as_out_20250921_21_combined.md
+$cubic_data << EOD
+0 77.287
+1 81.129
+2 82.625
+3 82.630
+4 82.704
+5 82.732
+6 82.661
+7 82.628
+8 82.699
+9 82.544
+10 82.513
+11 82.694
+12 82.710
+13 81.636
+14 82.752
+15 82.750
+16 82.677
+17 82.637
+18 82.701
+EOD
+# Plot all three lines with their respective data
+plot $bbr_data using 1:2 with lines ls 1 title "CCA=BBRv1", \
+     $cubic_data using 1:2 with lines ls 2 title "CCA=Cubic"
+

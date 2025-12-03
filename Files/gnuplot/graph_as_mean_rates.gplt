@@ -1,0 +1,95 @@
+#
+# Copyright 2024 Zettar Inc. All rights reserved.
+#
+# The following code is for internal use only.  Redistribution in any
+# form to a third party is prohibited without prior written permission
+# from Zettar Inc.
+#
+# Name   : rate_mean.gplt - a gnuplot command file for creating
+#                           Zettar zx append streaming data rate
+#                           line plots.
+#
+# Authors: Chin Fang <fangchin@zettar.com>
+
+#
+# Purpose: Plotting Zettar zx Append Streaming site-to-site (aka
+#          (aka simple AS) data rate line plots for append
+#          streaming over datasets consisting of different
+#          eventual file sizes from 4MiB to 1TiB. Each dataset 
+#          has an eventual size 1TiB.
+#
+# Notes :  0. It is assumed that each sweep consists of three
+#             iterations. Each iteration produces a column of
+#             pairs. The floating point number is the data rate; the
+#             integer is the corresponding duration in seconds.
+#          1. Since three iterations are used, so each sweep at a set
+#             latency consists of 3 columns of pairs or six columns of
+#             floating point numbers and integers arranged
+#             alternatively.
+#          2. Thus, if there are more iterations employed, the plot
+#             commands towards the bottom must be adjusted.
+#          3. To limit the Y axis by some range or to start it from
+#             a number != 0, e.g. 50, replace 
+#
+#             set yrange [0:]
+#             with 
+#             set yrange [50:]
+#
+#             and run gnuplot again.
+#
+# Usage: 
+#
+# Assuming
+#
+# o The command file is called rate_mean.gplt
+# o The input data file is 'inputs.dat'
+# o The output file is 'graph_rates.svg'
+#
+# then, do the following:
+#
+# gnuplot -e "datafile='inputs.dat'; outputfile='as_mean_rates.svg'" graph_as_mean_rates.gplt
+
+# Set terminal type to svg for maximum applicability
+set terminal svg enhanced background rgb "white" size 1100,600
+set output outputfile
+
+# Get today's date in YYYY-MM-DD format
+date_str = system("date +'%Y-%m-%d'")
+# Title
+set title "Zettar zx Append Streaming 3-run Mean Data Rates on 2024-07-03 \n". \
+          "{/*0.8 using the latency simulation-capable testbed in Intel Swindon lab, Swindon, U.K.}\n". \
+          "{/*0.7 TLS-encrypted. Across different Eventual File Sizes And Latencies}" \
+          font "Times Bold, 22"
+
+# X
+set xlabel "Dataset (eventual size 1TiB)" offset 0,1
+set xlabel font "Times Bold,16"
+set xtics font "Verdana,12"
+set xtics rotate by 45 right
+
+# Y
+set ylabel "Mean Data Rates (Gbps)"
+set ylabel font "Times Bold,16"
+set yrange [0:]
+set grid ytics
+set ytics scale 0.2
+set xtics scale 0.2
+
+# Grid - light-grey; every 20 on vert; every step on hor
+set style line 101 lc rgb "#D3D3D3" lt 1 lw 1
+set grid ytics mytics ls 101
+set ytics font "Verdana,12"
+set ytics 10
+set mytics 1
+set grid xtics mxtics ls 101
+set xtics 10
+set mxtics 1
+
+# Legend
+set key outside right
+set key font "Verdana,16"
+
+# Plot
+plot datafile using (($2 + $4  + $6) / 3):xtic(1) with lp lc rgb "#004586" pt 5 ps 0.7 lw 2 title "latency=10ms", \
+     datafile using (($4 + $10 + $16) / 3):xtic(1) with lp lc rgb "#ff420e" pt 7 ps 0.7 lw 2 title "latency=50ms", \
+     datafile using (($6 + $12 + $18) / 3):xtic(1) with lp lc rgb "#ffd320" pt 9 ps 0.7 lw 2 title "latency=100ms"
